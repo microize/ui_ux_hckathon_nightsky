@@ -1,0 +1,62 @@
+/* sidebar.css */
+.sidebar {
+    background-color: #2d3748;
+    color: white;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    transition: all 0.3s;
+  }
+  
+  .sidebar-closed {
+    width: 80px;
+  }
+  
+  .sidebar-open {
+    width: 256px;
+  }
+  
+  .menu-item {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .menu-item:hover {
+    background-color: #4a5568;
+  }
+  
+  .submenu {
+    margin-left: 32px;
+  }
+  
+  .profile-section {
+    padding: 16px;
+    border-top: 1px solid #4a5568;
+  }
+  
+  .profile-image {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+  }
+  
+  .chat-message {
+    max-width: 75%;
+    padding: 8px;
+    border-radius: 8px;
+  }
+  
+  .chat-message-user {
+    background-color: #4299e1;
+    color: white;
+  }
+  
+  .chat-message-bot {
+    background-color: #e2e8f0;
+    color: black;
+  }
+  
