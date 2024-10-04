@@ -5,13 +5,10 @@ export const lightTheme = createTheme({
     mode: "light",
     background: {
       paper: "#E7ECEF",
-      div: "#E7ECEF",
-      box: "#E7ECEF",
-      docked: "#E7ECEF",
-      root: "#FCFCFC",
+      default: "#FCFCFC",
     },
     text: {
-      primary: "#11111",
+      primary: "#111",
     },
     primary: {
       main: '#1976d2',  
@@ -20,18 +17,6 @@ export const lightTheme = createTheme({
       main: '#f50057',  
     },
   },
-  components: {
-    MuiContainer: {
-      styleOverrides: {
-        root: {
-          backgroundColor: "#FCFCFC",
-          padding: 0,
-          margin: 0,
-          width: "auto"
-        }
-      }
-    }
-  }
 });
 
 export const darkTheme = createTheme({
@@ -39,17 +24,16 @@ export const darkTheme = createTheme({
     mode: "dark",
     background: {
       paper: "#222",
-      nav: "#30393F",
-      box: "#30393F",
+      default: "#30393F",
     },
     text: {
       primary: "#fff",
     },
     primary: {
-      main: '#1976d2',  
+      main: '#90caf9',  
     },
     secondary: {
-      main: '#f50057',  
+      main: '#f48fb1',  
     },
   },
 });

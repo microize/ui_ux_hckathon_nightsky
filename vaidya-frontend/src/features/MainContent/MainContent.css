@@ -1,0 +1,13 @@
+/* src/features/MainContent/MainContent.css */
+
+/* Add any custom styles here */
+
+/* Example styling for the cards */
+.MuiCard-root {
+    height: 100%;
+  }
+  
+  .MuiCardContent-root {
+    text-align: center;
+  }
+  
