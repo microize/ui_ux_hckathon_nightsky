@@ -379,47 +379,63 @@ const MainContent = () => {
         </>
       )}
 
-      {/* Chat messages */}
-      <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2 }}>
-        {messages.map((message) => (
-          <Box
-            key={message.id}
-            sx={{           
-              display: 'flex',
-              justifyContent: message.sender === 'user' ? 'flex-end' : 'flex-start',
-              mb: 1,
-            }}
-          >
+      
+
+        {/* Chat messages */}
+        <Box sx={{ flexGrow: 1, p: 2 }}>
+          {messages.map((message) => (
             <Box
+              key={message.id}
               sx={{
-                maxWidth: '75%',
-                bgcolor: message.sender === 'user' ? 'primary.main' : 'grey.300',
-                color:
-                  message.sender === 'user' ? 'primary.contrastText' : 'text.primary',
-                p: 1,
-                borderRadius: 1,
+                display: 'flex',
+                flexDirection: message.sender === 'user' ? 'row-reverse' : 'row',
+                alignItems: 'flex-end',
+                mb: 1,
               }}
             >
-              {message.text && (
-                <Typography variant="body1">{message.text}</Typography>
-              )}
-              {message.image && (
+              {/* Profile Picture */}
+              <Box sx={{ width: 40, height: 40, mx: 1 }}>
                 <img
-                  src={message.image.data}
-                  alt={message.image.fileName || 'Uploaded image'}
-                  style={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: '8px',
-                    marginTop: '0.5rem',
-                  }}
+                  src={message.sender === 'user' ? profile_picture : vaidya_logo}
+                  alt={`${message.sender} profile`}
+                  style={{ width: '100%', height: '100%', borderRadius: '50%' }}
                 />
-              )}
+              </Box>
+              {/* Message Bubble */}
+              <Box
+                sx={{
+                  maxWidth: '75%',
+                  bgcolor: message.sender === 'user' ? 'primary.main' : 'grey.300',
+                  color:
+                    message.sender === 'user'
+                      ? 'primary.contrastText'
+                      : 'text.primary',
+                  p: 1,
+                  borderRadius: 1,
+                  mt: 'auto',
+                }}
+              >
+                {message.text && (
+                  <Typography variant="body1">{message.text}</Typography>
+                )}
+                {message.image && (
+                  <img
+                    src={message.image.data}
+                    alt={message.image.fileName || 'Uploaded image'}
+                    style={{
+                      width: '100%',
+                      maxHeight: '200px',
+                      borderRadius: '8px',
+                      marginTop: '0.5rem',
+                      objectFit: 'contain',
+                    }}
+                  />
+                )}
+              </Box>
             </Box>
-          </Box>
-        ))}
-        <div ref={chatEndRef} />
-      </Box>
+          ))}
+          <div ref={chatEndRef} />
+        </Box>
 
       {/* Text input at the bottom */}
       <Box sx={{ display: 'flex', alignItems: 'center', p: 2 }}>
