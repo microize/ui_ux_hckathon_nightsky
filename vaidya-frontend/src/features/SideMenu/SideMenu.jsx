@@ -14,9 +14,9 @@ import {
   AutoAwesome as AutoAwesomeIcon,
   SportsVolleyball as SportsVolleyballIcon,
   HistoryEdu as HistoryEduIcon,
+  ExpandLess,
+  ExpandMore,
 } from '@mui/icons-material';
-import ExpandLess from '@mui/icons-material/ExpandLess';
-import ExpandMore from '@mui/icons-material/ExpandMore';
 import {
   FormControlLabel,
   Switch,
@@ -29,12 +29,15 @@ import {
   IconButton,
   Collapse,
   Container,
+  Typography,
+  Button,
 } from '@mui/material';
 
 import { styled, useTheme } from '@mui/material/styles';
 
 import './sideMenu.css';
 import { toggleTheme } from '../theme/themeSlice';
+import { logout } from '../Auth/authSlice';
 
 const drawerWidth = 240;
 const DrawerHeader = styled('div')(({ theme }) => ({
@@ -87,6 +90,8 @@ const SideMenu = () => {
   const themeState = useSelector((state) => state.theme);
   const muiTheme = useTheme();
   const dispatch = useDispatch();
+
+  const user = useSelector((state) => state.auth.user);
 
   const conversations = useSelector((state) =>
     state.conversation.conversations.filter((conv) => conv.messages.length > 0)
@@ -231,14 +236,14 @@ const SideMenu = () => {
       </List>
       <Container
         maxWidth="sm"
-        sx={{ borderRadius: '0.3rem', margin: '0 0.5rem' }}
+        sx={{ borderRadius: '0.3rem', margin: '0 0.5rem', mt: 'auto', mb: 2 }}
       >
         <div className="profile-section">
           <img src={profile_picture} alt="Profile" className="profile-image" />
-          {open && (
+          {open && user && (
             <div className="profile-details">
-              <p className="font-semibold">John Doe</p>
-              <p className="text-sm">john@example.com</p>
+              <Typography variant="subtitle1">{user.name}</Typography>
+              <Typography variant="body2">{user.email}</Typography>
             </div>
           )}
         </div>
@@ -251,6 +256,15 @@ const SideMenu = () => {
           }
           label="Toggle Theme"
         />
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={() => dispatch(logout())}
+          fullWidth
+          sx={{ mt: 2 }}
+        >
+          Logout
+        </Button>
       </Container>
     </Drawer>
   );

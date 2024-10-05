@@ -4,6 +4,7 @@ import sideMenuReducer from '../features/SideMenu/sideMenuSlice';
 import themeReducer from '../features/theme/themeSlice';
 import navigationReducer from '../features/Navigation/navigationSlice';
 import conversationReducer from '../features/Conversation/conversationSlice';
+import authReducer from '../features/Auth/authSlice';
 
 export const store = configureStore({
   reducer: {
@@ -11,5 +12,6 @@ export const store = configureStore({
     sideMenu: sideMenuReducer,
     navigation: navigationReducer,
     conversation: conversationReducer,
+    auth: authReducer,
   },
 });

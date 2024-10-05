@@ -17,12 +17,14 @@ import {
   ListItemText,
   InputAdornment,
 } from '@mui/material';
-import SendIcon from '@mui/icons-material/Send';
-import MicIcon from '@mui/icons-material/Mic';
-import AddIcon from '@mui/icons-material/Add';
-import CloseIcon from '@mui/icons-material/Close';
+import {
+  Send as SendIcon,
+  Mic as MicIcon,
+  Add as AddIcon,
+  Close as CloseIcon,
+} from '@mui/icons-material';
 import { v4 as uuidv4 } from 'uuid';
-
+import axios from 'axios';
 import {
   addConversation,
   addMessageToConversation,
@@ -34,7 +36,6 @@ import { navigateTo } from '../Navigation/navigationSlice';
 import './MainContent.css';
 import profile_picture from '../../assets/profile_picture.png';
 import vaidya_logo from '../../assets/vaidya_logo.png';
-
 
 const quickStartConversations = [
   {
@@ -101,6 +102,9 @@ const MainContent = () => {
   // State for selected image
   const [selectedImage, setSelectedImage] = useState(null);
 
+  const accessToken = useSelector((state) => state.auth.accessToken);
+  const user = useSelector((state) => state.auth.user);
+
   // Scroll to bottom whenever messages change
   useEffect(() => {
     if (chatEndRef.current) {
@@ -141,7 +145,7 @@ const MainContent = () => {
     }
   }, []);
 
-  const handleCardClick = (topic) => {
+  const handleCardClick = async (topic) => {
     let conversationId = currentConversationId;
     if (!conversationId) {
       conversationId = uuidv4();
@@ -169,11 +173,11 @@ const MainContent = () => {
       })
     );
 
-    generateBotResponse(topic.title, conversationId);
+    await generateBotResponse(topic.title, conversationId);
     setCardsVisible(false);
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (inputValue.trim() !== '' || selectedImage) {
       let conversationId = currentConversationId;
       if (!conversationId) {
@@ -204,7 +208,7 @@ const MainContent = () => {
         })
       );
 
-      generateBotResponse(inputValue || 'Image sent', conversationId);
+      await generateBotResponse(inputValue || 'Image sent', conversationId);
       setInputValue('');
       setSelectedImage(null);
 
@@ -221,22 +225,74 @@ const MainContent = () => {
     }
   };
 
-  const generateBotResponse = (userText, conversationId) => {
-    // Placeholder for bot's response logic
-    const botResponseText = `Bot response to "${userText}" goes here.`;
-    const botMessage = {
-      id: uuidv4(),
-      sender: 'bot',
-      text: botResponseText,
-      type: 'text',
-      createdAt: Date.now(),
-    };
-    dispatch(
-      addMessageToConversation({
-        conversationId: conversationId,
-        message: botMessage,
-      })
-    );
+  const generateBotResponse = async (userText, conversationId) => {
+    try {
+      const response = await axios.post(
+        'https://rnp-dev.fractal.ai/vaidya-wrp/process/',
+        {
+          text: userText,
+          image: selectedImage ? selectedImage.data : null,
+          conv_history: '', // Include conversation history if needed
+        },
+        {
+          headers: {
+            Authorization: accessToken,
+          },
+        }
+      );
+
+      const botResponseText = response.data; // Adjust based on actual response structure
+
+      const botMessage = {
+        id: uuidv4(),
+        sender: 'bot',
+        text: botResponseText,
+        type: 'text',
+        createdAt: Date.now(),
+      };
+      dispatch(
+        addMessageToConversation({
+          conversationId: conversationId,
+          message: botMessage,
+        })
+      );
+
+      // Save the conversation after bot responds
+      saveConversation(userText, botResponseText, conversationId);
+    } catch (error) {
+      console.error('Error generating bot response:', error);
+      // Handle error (e.g., display an error message)
+    }
+  };
+
+  const saveConversation = async (userText, botResponseText, conversationId) => {
+    const conversation = conversations.find((c) => c.id === conversationId);
+    const sessionid = conversationId; // Use conversation ID as session ID
+    const iterationid = Date.now().toString(); // Unique iteration ID
+
+    try {
+      await axios.post(
+        'https://rnp-dev.fractal.ai/astra-api-svc/api/v1/conversation/save/',
+        {
+          appid: 1,
+          email: user.email,
+          sessionid: sessionid,
+          interationid: iterationid,
+          user: userText,
+          system: botResponseText,
+          feedback: 1, // Assuming positive feedback by default
+          feedbacktxt: 'Positive feedback text',
+        },
+        {
+          headers: {
+            Authorization: accessToken,
+          },
+        }
+      );
+    } catch (error) {
+      console.error('Error saving conversation:', error);
+      // Handle error
+    }
   };
 
   const handleAddImage = (event) => {
@@ -346,11 +402,18 @@ const MainContent = () => {
   // Default page (Home / Chat)
   return (
     <Box
-      sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', height: '100%' }}
+      sx={{
+        flexGrow: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        alignItems: 'center',
+        overflow: 'hidden',
+      }}
     >
       {/* Conditionally render the welcome message and cards */}
       {cardsVisible && (
-        <>
+        <Box sx={{ width: '100%', maxWidth: '800px', px: 2 }}>
           {/* Welcome Message */}
           <Typography variant="h4" align="center" sx={{ mt: 2 }}>
             Hello everyone
@@ -376,20 +439,30 @@ const MainContent = () => {
             ))}
           </Grid>
           <Divider />
-        </>
+        </Box>
       )}
 
-      
-
+      {/* Chat messages and input area */}
+      <Box
+        sx={{
+          width: '100%',
+          maxWidth: '800px',
+          flexGrow: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          overflow: 'hidden',
+        }}
+      >
         {/* Chat messages */}
-        <Box sx={{ flexGrow: 1, p: 2 }}>
+        <Box sx={{ flexGrow: 1, p: 2, overflowY: 'auto' }}>
           {messages.map((message) => (
             <Box
               key={message.id}
               sx={{
                 display: 'flex',
                 flexDirection: message.sender === 'user' ? 'row-reverse' : 'row',
-                alignItems: 'flex-end',
+                alignItems: 'flex-start',
                 mb: 1,
               }}
             >
@@ -404,7 +477,7 @@ const MainContent = () => {
               {/* Message Bubble */}
               <Box
                 sx={{
-                  maxWidth: '75%',
+                  maxWidth: '70%',
                   bgcolor: message.sender === 'user' ? 'primary.main' : 'grey.300',
                   color:
                     message.sender === 'user'
@@ -413,6 +486,7 @@ const MainContent = () => {
                   p: 1,
                   borderRadius: 1,
                   mt: 'auto',
+                  wordWrap: 'break-word',
                 }}
               >
                 {message.text && (
@@ -437,64 +511,65 @@ const MainContent = () => {
           <div ref={chatEndRef} />
         </Box>
 
-      {/* Text input at the bottom */}
-      <Box sx={{ display: 'flex', alignItems: 'center', p: 2 }}>
-        {/* Left side '+' icon */}
-        <IconButton color="primary" component="label">
-          <AddIcon />
-          <input type="file" accept="image/*" hidden onChange={handleAddImage} />
-        </IconButton>
+        {/* Text input at the bottom */}
+        <Box sx={{ display: 'flex', alignItems: 'center', p: 2 }}>
+          {/* Left side '+' icon */}
+          <IconButton color="primary" component="label">
+            <AddIcon />
+            <input type="file" accept="image/*" hidden onChange={handleAddImage} />
+          </IconButton>
 
-        {/* Text Field */}
-        <TextField
-          variant="outlined"
-          placeholder="Type your message..."
-          fullWidth
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyPress={(e) => {
-            if (e.key === 'Enter') handleSendMessage();
-          }}
-          sx={{ mx: 1 }}
-          InputProps={{
-            startAdornment: selectedImage && (
-              <InputAdornment position="start">
-                <Box sx={{ position: 'relative', display: 'inline-block' }}>
-                  <img
-                    src={selectedImage.data}
-                    alt={selectedImage.fileName || 'Selected image'}
-                    style={{ width: 20, height: 20 }}
-                  />
+          {/* Text Field */}
+          <TextField
+            variant="outlined"
+            placeholder="Type your message..."
+            fullWidth
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') handleSendMessage();
+            }}
+            sx={{ mx: 1 }}
+            InputProps={{
+              startAdornment: selectedImage && (
+                <InputAdornment position="start">
+                  <Box sx={{ position: 'relative', display: 'inline-block' }}>
+                    <img
+                      src={selectedImage.data}
+                      alt={selectedImage.fileName || 'Selected image'}
+                      style={{ width: 20, height: 20 }}
+                    />
+                    <IconButton
+                      size="small"
+                      sx={{
+                        position: 'absolute',
+                        top: -10,
+                        right: -10,
+                        backgroundColor: 'rgba(255,255,255,0.8)',
+                      }}
+                      onClick={handleRemoveImage}
+                    >
+                      <CloseIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
                   <IconButton
-                    size="small"
-                    sx={{
-                      position: 'absolute',
-                      top: -10,
-                      right: -10,
-                      backgroundColor: 'rgba(255,255,255,0.8)',
-                    }}
-                    onClick={handleRemoveImage}
+                    color={isListening ? 'secondary' : 'primary'}
+                    onClick={handleMic}
                   >
-                    <CloseIcon fontSize="small" />
+                    <MicIcon />
                   </IconButton>
-                </Box>
-              </InputAdornment>
-            ),
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  color={isListening ? 'secondary' : 'primary'}
-                  onClick={handleMic}
-                >
-                  <MicIcon />
-                </IconButton>
-                <IconButton color="primary" onClick={handleSendMessage}>
-                  <SendIcon />
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
+                  <IconButton color="primary" onClick={handleSendMessage}>
+                    <SendIcon />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Box>
       </Box>
     </Box>
   );

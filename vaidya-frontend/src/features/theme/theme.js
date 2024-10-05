@@ -1,5 +1,11 @@
 import { createTheme } from "@mui/material";
 
+const commonThemeProperties = {
+  typography: {
+    fontFamily: 'Poppins, Arial, sans-serif',
+  },
+};
+
 export const lightTheme = createTheme({
   palette: {
     mode: "light",
